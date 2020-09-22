@@ -15,23 +15,25 @@ categories: jekyll update
 
 ## Introduction
 
-Most of the code from this post is available in a Swift [Playground](), and I strongly recommend to follow the Playground while reading the post.
+Most of the code from this post is available in a Swift [Playground](https://github.com/jrBordet/Lenses---an-introduction), and I strongly recommend to follow the Playground while reading the post.
 
-A Lens is basically a container with a getter and setter functions which focus on a field inside a whole. Think about the container as the whole and the field as the part.
+A Lens is basically a container with a getter and setter functions which focus on a field inside a whole. 
+
+Think about the container as the `whole` and the field as the `part`.
 
 ### getter
 
 The getter takes a whole and returns the part of the object that the lens is focused on.
 
-`let get: (Whole) -> Part`
+`let _ = get: (Whole) -> Part`
 
 ### setter
 
 The setter takes a whole, and a value to set the part to and returns a new whole with the part updated.
 
-`let set: (Part, Whole) -> Whole`
+`let _ =  set: (Part, Whole) -> Whole`
 
-Considering this let me define our `container` over a generic Whole (A) and a Part (B)
+Considering this, let me define a new `container` over a generic Whole (A) and a Part (B)
 
 {% highlight swift %}
 
@@ -47,7 +49,7 @@ public struct Lens <A, B> {
 }
 {% endhighlight %}
 
-let's start with a pratical example, so we have a model composed by a User and related Address.
+Let's start with a pratical example. Suppose that we have a model composed by a User and related Address.
 
 {% highlight swift %}
 struct User {
@@ -55,17 +57,9 @@ struct User {
     let address: Address
 }
 
-extension User {
-    static var one = User(name: "One", address: .one)
-}
-
 struct Address {
     let street: String
     let city: String
-}
-
-extension Address {
-    static var one = Address(street: "Street 01", city: "NY")
 }
 {% endhighlight %}
 
@@ -96,10 +90,19 @@ Usage example
 
 {% highlight swift %}
 let name = lensPersonName.get(.one)
-let newUser = lensPersonName.set("new user One", .one)
+// Me
+
+let newUser = lensPersonName.set("mini Me", .one)
+  // name: "mini Me"
+  // address:
+    // street: "Street 01"
+    // city: "NY"
+    // building: nil
 {% endhighlight %}
 
-And we can go deeper inside the user and focus on the entire address
+As you can see we have a new User based on `User.one` with just the field `name` updated, pretty cool.
+
+And we can go deeper inside the user and focus onto the entire address.
 
 {% highlight swift %}
 let lensUserAddress = Lens<User, Address>(
@@ -108,8 +111,10 @@ let lensUserAddress = Lens<User, Address>(
 )
 
 let address = lensUserAddress.get(.one)
-type(of: address)
-{% endhighlight %}
+  // street: "Street 01"
+  // city: "NY"
+  // building: nil
+  {% endhighlight %}
 
 <!--
 Why Lenses?
