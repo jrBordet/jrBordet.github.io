@@ -10,6 +10,9 @@ categories: jekyll update
 * [Composing Lenses](#composing-lenses)
     * [operator `>>>`](#operator)
 * [Over](#over)
+* [Why Lenses?](#why-lenses)
+* [Zip](#zip)
+
 
 <!--https://medium.com/javascript-scene/lenses-b85976cb0534-->
 
@@ -25,13 +28,13 @@ Think about the container as the `whole` and the field as the `part`.
 
 The getter takes a whole and returns the part of the object that the lens is focused on.
 
-`let _ = get: (Whole) -> Part`
+`get: (Whole) -> Part`
 
 ### setter
 
 The setter takes a whole, and a value to set the part to and returns a new whole with the part updated.
 
-`let _ =  set: (Part, Whole) -> Whole`
+`set: (Part, Whole) -> Whole`
 
 Considering this, let me define a new `container` over a generic Whole (A) and a Part (B)
 
@@ -135,9 +138,8 @@ Consider the problem to create a lens that focus on the Street (field from Adres
 
 The problem: are we able to write a lens with a shape as `Lens<User, String>` focusing on the street of the address from a given user? And the answer is yes, and we should do that.
 
-So consider those two lenses 
+So consider those two lenses
 `Lens<User, Address>` and `Lens<Address, String>`
-
 
 {% highlight swift %}
 func lensUserStreet(_ lhs: Lens<User, Address>, _ rhs: Lens<Address, String>) -> Lens<User, String> {
@@ -153,24 +155,42 @@ func lensUserStreet(_ lhs: Lens<User, Address>, _ rhs: Lens<Address, String>) ->
         return newUser
     })
 }
-
 {% endhighlight %}
 
 Usage
 
 {% highlight swift %}
 
-// Get a new User based on .one with a new Street
+// Get a new User based on User.me with a new Street
 lensUserStreet(lensUserAddress, lensAddressStret).set("street update", .one)
+// name: "Me"
+// address:
+//  street: "street update"
+//  city: "NY"
+//  building: nil
 
+// Get the street from User.me
+lensUserStreet(lensUserAddress, lensAddressStret).get(.me)
+// Street 01
+{% endhighlight %}
+
+<!-- 
+ -->
+
+ Considering the shape of the function we have written, are we able to see a kind of pattern?
+
+ {% highlight swift %}
+(lhs: Lens<User, Address>, // Lens<A, B>
+rhs: Lens<Address, String>) // Lens<B, C>
+-> Lens<User, String> // Lens<A, C>
 {% endhighlight %}
 
 
-But, is really boilerplate. We should ask to ourselves: is there a way to write a generic function to do this work?
- 
-And the answer is yes again. 
+<!-- But, is really boilerplate. We should ask to ourselves: is there a way to write a generic function to do this work? -->
 
-Considering that Lenses are functional getter and setter means that are composable like every function.
+So, seems that we have the chance to write a more generic function to compose lenses, let's try to do that.
+
+<!-- Considering that Lenses are functional getter and setter means that are composable like every function. -->
  
 Lets' start write our generic `compose` function
  
@@ -219,9 +239,9 @@ lensUserAddress >>> lensAddressCity
 
 ## Over
 
-It’s possible to apply a function from `a` to `b` in the context of any data type? We've already demonstrated that data type mapping is composition. Similarly, we can apply a function to the value of focus in a lens. Typically, that value would be of the same type, so it would be a function from `a` to `a`. 
+For the next step we should ask to our selves: it is possible to apply a function from `a` to `b` in the context of any data type? We've already demonstrated that data type mapping is composition and similarly we can apply a function to the value of focus in a lens. Typically, that value would be of the same type, so it would be a function from `a` to `a`.
 
-The lens map operation is commonly called `over`. 
+The lens map operation is commonly called `over`.
 
 We can add to our Lens<A, B> a new function with a shape like that
 
@@ -238,7 +258,7 @@ public func over(_ f: @escaping (B) -> B) -> ((A) -> A) {
 
 We can read the fuction `over` as: if you give me a way to transform a part, I will give you back a new whole with the part transformed.
 
-And a pratical example is a lens that focus on a City of a given User and return a new User with the field city tranformed by the capitalized function.
+And a pratical example is a lens that focus on a City of a given User and return a new User with the field city tranformed by a capitalization.
 
 {% highlight swift %}
 
@@ -246,21 +266,34 @@ let lensUserCityCapitalized = lensUserCity.over { $0.capitalized }
 
 lensUserCityCapitalized(.one) // User
 
-//- name: "One"
+//- name: "Me"
 //▿ address:
 //  - street: "Street 01"
 //  - city: "Ny"
 //  - building: nil
 {% endhighlight %}
 
+## Zip
+
+	<!-- func zip<OtherPart, OtherLens: LensType>(_ other: OtherLens) -> Lens<WholeType,(PartType,OtherPart)> where OtherLens.WholeType == WholeType, OtherLens.PartType == OtherPart {
+		return Lens<WholeType,(PartType,OtherPart)>(
+			get: { (self.get($0),other.get($0)) },
+			set: { other.set($0.1,self.set($0.0,$1)) })
+	} -->
 
 ## Why Lenses?
 
-State shape dependencies are a common source of coupling in software. Many components may depend on the shape of some shared state, so if you need to later change the shape of that state, you have to change logic in multiple places.
+The use of Lenses is tightly connected with __state immutability__ concept.
 
-Lenses allow you to abstract state shape behind getters and setters. Instead of littering your codebase with code that dives deep into the shape of a particular object, import a lens. If you later need to change the state shape, you can do so in the lens, and none of the code that depends on the lens will need to change.
+In Functional Programming we create immutable data types. When we use them we do not change their value or their state directly, instead we create a brand new one. The literal meaning of Immutability is __unable to change__.
 
-This follows the principle that a small change in requirements should require only a small change in the system.
+Consider that __state shape dependencies__ are a common source of coupling in software. We have always many components that depends on the shape of some shared state, so if we need to later change the shape of that state we have to change logic in multiple places.
+
+Lenses solves this problem allowing us to abstract state shape behind getters and setters.
+
+Instead of littering our codebase with code that dives deep into the shape of a particular object we can create a Lens. If we need later to change the state shape, we can do so in the Lens, and none of the code that depends on the Lens will need to change.
+
+> a small change in requirements should require only a small change in the system
 
 ## Lens Laws
 
