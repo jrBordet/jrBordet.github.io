@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Lenses - an introduction"
+title:  "Lenses in a nutshell"
 date:   2020-09-21 09:47:32 +0200
 categories: jekyll update
 ---
@@ -261,7 +261,7 @@ lensUserCityCapitalized(.one) // User
 
 ## Zip
 
-The zip function mixes together two lenses with the same whole part, so we can apply both at the same time, by retrieving/modifying two things together.
+The zip function mixes together two lenses with the same `whole`, so we can apply both at the same time by getting/setting two `parts` together.
 
 {% highlight swift %}
 /// - Parameters:
@@ -281,6 +281,30 @@ public func zip<A, B, C>(
     })
 }
 {% endhighlight %}
+
+An usage example
+
+{% highlight swift %}
+let update = (
+    name: "new Me name",
+    address: Address(street: "Some street", city: "Turin", building: nil)
+)
+
+let newMe = zip(lensUsernName, lensUserAddress).set(update, User.me)
+
+let zipAndOver = zip(lensUsernName, lensUserAddress).over { (name: String, address: Address) -> (String, Address) in
+    (
+        name.lowercased() + " 😀",
+        Address(
+            street: address.street.capitalized,
+            city: address.city.uppercased(),
+            building: nil
+        )
+    )
+}
+{% endhighlight %}
+
+And consider how much is easy to go deeper creating a `zip` focusing on n-values
 
 {% highlight swift %}
 public func zip2<A, B, C, D>(
@@ -308,24 +332,6 @@ public func zip3<A, B, C, D, E>(
     }, set: { (parts, whole) -> A in
         zip(first, zip2(second, third, fourth)).set(parts, whole)
     })
-}
-{% endhighlight %}
-
-{% highlight swift %}
-let update = ("Zipped Me", Address(street: "Some street", city: "Turin", building: nil))
-
-let newMe = zip(lensUsernName, lensUserAddress).set(update, User.me)
-newMe
-
-let zipAndOver = zip(lensUsernName, lensUserAddress).over { (name: String, address: Address) -> (String, Address) in
-    (
-        name.lowercased() + " 😀",
-        Address(
-            street: address.street.capitalized,
-            city: address.city.uppercased(),
-            building: nil
-        )
-    )
 }
 {% endhighlight %}
 
@@ -357,10 +363,22 @@ It's easy to notice that the code for implementing Lenses for our data types is 
 
 And the answer comes with Swift 4 that introduced the new __KeyPath__ type.
 
+#### Functional Setter with KeyPath
 {% highlight swift %}
+let newBook = .galacticGuideForHitchhikers |> \Book.author.name *~ "Adams Noël"
+{% endhighlight %}
+
+
+#### Functional Getter with KeyPath
+{% highlight swift %}
+
 let name = .galacticGuideForHitchhikers |> ^\Book.author.name
 
-let newBook = .galacticGuideForHitchhikers |> \Book.author.name *~ "Adams Noël"
+// Filter operations
+let book = books.filter(by(^\.author.name, "Massimo"))
+
+// Sorting operations
+let usersSorted = users.sorted(by: their(^\User.id, >))
 {% endhighlight %}
 
 Until a dedicated article you can check this code on [Caprice](https://github.com/jrBordet/Caprice)
