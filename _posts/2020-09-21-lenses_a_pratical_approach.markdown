@@ -7,6 +7,7 @@ categories: jekyll update
 
 # Table of Contents
 * [Introduction](#introduction)
+    * [Immutability](#immutability)
 * [Composing Lenses](#composing-lenses)
     * [operator `>>>`](#operator)
 * [Over](#over)
@@ -18,6 +19,16 @@ categories: jekyll update
 <!--https://medium.com/javascript-scene/lenses-b85976cb0534-->
 
 ## Introduction
+
+### Immutability
+
+In functional programming the concept of `Immutability` is not about forbidding change at all, instead is more on how to handle changes. You still can add or remove an element to an array, the difference is that you just do it differently.
+
+Usually in a `mutable world` you would directly add or remove elements to an array, instead in an `immutable world` you create a brand new array instead. 
+
+The key concept is to understand that instead of modifying something you create something new with your change applied. Once you understand it is more about creating new things with your changes applied.
+
+### Lenses as a container
 
 Most of the code from this post is available in a Swift [Playground](https://github.com/jrBordet/Lenses---an-introduction), and I strongly recommend to follow it while reading the post.
 
