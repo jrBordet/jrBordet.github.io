@@ -154,7 +154,7 @@ And that's it!
     
 ### composition law or omptimisations
 
-The composition law ensures that `map (f) >>> map (g) or map (f >>> g)` lead to the same result, or in other words that the composition of the `maps` is equal of the `map` of `composition`. And the second law is verified.
+The composition law ensures that `map (f) >>> map (g) or map (f >>> g)` lead to the same result, or in other words that the composition of the `maps` is equal of the `map` of `composition`.
 
 To demonstrate the second law we need a new function `pipe` to compose two functions.
  
@@ -171,7 +171,7 @@ public func pipe<A, B, C>(
 
 Basically the idea behind a `pipe` function is that applying a function `f: (A) -> B` and `g: (B) -> C` is equal to apply just `z: (A) -> C`.
 
-Define two simple foucntions to compute an `Int`
+Define two simple functions to compute an `Int`
 
 {% highlight swift %}
 let incr: (Int) -> Int = { v in v + 1 }
@@ -197,7 +197,55 @@ let result_chaining = Maybe
 XCTAssertEqual(result_composition, result_chaining)
 {% endhighlight %}
 
-And that's it, the composition of the `maps` is the `map` of `composition`
+And that's it, the composition of the `maps` is the `map` of `composition`, and the second law is verified.
+
+And with the new `pipe` we can write more complex functionality. 
+
+For semplicity let me define a new operator `<^>` (<$> in Haskell) for the `map` and bring it together with `pipe` composition.
+
+{% highlight swift %}
+func <^> <A, B>(f: @escaping (A) -> B, a: Maybe<A>) -> Maybe<B>
+{% endhighlight %}
+
+The left side is just our `map` function that take a value `A` and transform it in `B`, and the right side is our `Maybe` over a genric `A`. As I said is just an operator over the `map` function but it give us a great power to combine complex operations toghether.
+
+{% highlight swift %}
+let incr: (Int) -> Int = { $0 + 1 }
+let square: (Int) -> Int = { $0 * $0 }
+
+let result = pipe(incr, square) <^> Maybe<Int>(3)
+// 16 
+{% endhighlight %}
+
+This code take a number `3` and increment it by `1` and then `square` the result.
+
+{% highlight swift %}
+let fancy = { (i: Int) in "fancy \(i)" }        
+let fancy_incr = pipe(incr, fancy) <^> Maybe<Int>(3)
+// "fancy 4"
+{% endhighlight %}
+    
+#### Array as Functor
+
+{% highlight swift %}
+let transform = pipe({ $0 + 2 }, { $0 + 1 })
+ 
+let result = transform <^> [0, 1, 2, 3] // [0, 1, 2, 3].map(transform)
+
+XCTAssertEqual(result, [3, 4, 5, 6])
+{% endhighlight %}
+
+#### Optional as Functor
+
+{% highlight swift %}
+let a: Int? = 3
+
+let transform = pipe({ $0 + 2 }, { $0 + 1 })
+
+let result = transform <^> a // a.map(transform)
+
+XCTAssertEqual(result, 6)
+{% endhighlight %}
 
 ## Just what is a Functor, really?
 
@@ -263,7 +311,8 @@ func apply<B>(_ f: Maybe<((A) -> B)>) -> Maybe<B> {
 }
 {% endhighlight %}
 
-Here’s something you can do with `applicatives` that you cannt do with `functors`. 
+
+Here’s something you can do with `applicatives` that you cannot do with `functors`. 
 
 How do you apply a `function` that takes two arguments to two wrapped `values`?
 
@@ -271,11 +320,15 @@ How do you apply a `function` that takes two arguments to two wrapped `values`?
 func addition(_ a: Int, b: Int) -> Int { a + b }
 {% endhighlight %}
 
-{% highlight swift %}
-let result = curry(addition) <^> Maybe(41) <*> Maybe(1) // 42
-{% endhighlight %}
+We can also define <*> to help us with `apply`
 
-To clarify the previous example take a look at the implementation with `optional`. The result is exactly the same. This because our `Maybe` act as an `optional`.
+{% highlight swift %}
+let a = Maybe(41)
+let b = Maybe(1)
+
+let result = curry(addition) <^> a <*> b{% endhighlight %}
+
+To clarify the previous example take a look at the implementation with `optional`. The result is exactly the same. This because our `Maybe` acts as an `optional`.
 
 {% highlight swift %}
 let a: Int? = 41
@@ -334,6 +387,18 @@ let result = Maybe(20) >>- half >>- half
 {% endhighlight %}
 
 ## Conclusion
+
+`Applicative functors` and `monads` have conquered the world of functional programming by providing general and powerful ways of describing effectful computations using pure functions. 
+
+Applicative functors provide a way to compose independent effects that cannot depend on values produced by earlier computations, and all of which are declared statically. 
+
+Monads extend the applicative interface by making it possible to compose dependent effects, where the value computed by one effect determines all subsequent effects, dynamically.
+
+Monads, introduced to functional programming by Wadler [1995], are a powerful and general approach for describing effectful (or impure) computations using pure functions. The key ingredient of the monad abstraction is the bind operator, denoted by >>= in Haskell:
+
+Maybe(20) >>- half >>- half // 5
+
+The operator takes two arguments: an effectful computation f a, which yields a value of type a when executed, and a recipe, i.e. a pure function of type a -> f b, for turning a into a subsequent computation of type f b. This approach to composing effectful computations is inherently sequential: until we execute the effects in f a, there is no way of obtaining the computation f b, i.e. these computations must be performed in sequence.
 
 A `functor` is a type that implements map.
 
