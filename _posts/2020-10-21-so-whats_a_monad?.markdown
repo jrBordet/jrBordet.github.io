@@ -386,19 +386,44 @@ let result = Maybe(20) >>- half >>- half
 // 5
 {% endhighlight %}
 
+### Monads's law
+
+All `monads` type should obey the three monad laws:
+* Left identity:	
+* Right identity:
+* Associativity
+
+references at [Haskell - monad laws](https://wiki.haskell.org/Monad_laws)
+
+For brievity we are going to consider just the associativty law, that lead us to define the monad composition operator (aka Kleisli operator)
+
+{% highlight swift %}
+func >=><A, B, C>(
+    _ lhs: @escaping(A) -> Maybe<B>,
+    _ rhs: @escaping(B) -> Maybe<C>
+) -> (A) -> Maybe<C> 
+{% endhighlight %}
+    
+The `Kleisli` operator unlock the power to compose `flatMap` in a consistent way.
+
+{% highlight swift %}
+let fancy: (Int) -> Maybe<String> = { Maybe.value("fancy \($0)") }
+
+let compute =
+    half(_:)
+    >=> incr(_:)
+    >=> fancy
+
+let result = compute(100) 
+
+// "fancy 51"
+{% endhighlight %}
+
 ## Conclusion
 
-`Applicative functors` and `monads` have conquered the world of functional programming by providing general and powerful ways of describing effectful computations using pure functions. 
+`Functors`, `Applicative functors` and `Monads` have conquered the world of functional programming by providing general and powerful ways of describing effectful computations using pure functions. 
 
-Applicative functors provide a way to compose independent effects that cannot depend on values produced by earlier computations, and all of which are declared statically. 
-
-Monads extend the applicative interface by making it possible to compose dependent effects, where the value computed by one effect determines all subsequent effects, dynamically.
-
-Monads, introduced to functional programming by Wadler [1995], are a powerful and general approach for describing effectful (or impure) computations using pure functions. The key ingredient of the monad abstraction is the bind operator, denoted by >>= in Haskell:
-
-Maybe(20) >>- half >>- half // 5
-
-The operator takes two arguments: an effectful computation f a, which yields a value of type a when executed, and a recipe, i.e. a pure function of type a -> f b, for turning a into a subsequent computation of type f b. This approach to composing effectful computations is inherently sequential: until we execute the effects in f a, there is no way of obtaining the computation f b, i.e. these computations must be performed in sequence.
+so, in a nutshell
 
 A `functor` is a type that implements map.
 
@@ -406,10 +431,4 @@ An `applicative` is a type that implements apply.
 
 A `monad` is a type that implements flatMap.
 
-Maybe implements map and flatMap, plus we can extend it to implement apply, so it is a functor, an applicative, and a monad.
-
-What is the difference between the three?
-
-* functors: you apply a function to a wrapped value using map.
-* applicatives: you apply a wrapped function to a wrapped value using apply, if defined.
-* monads: you apply a function that returns a wrapped value, to a wrapped value using flatMap.
+What we have done in this article is to define again the `Optional` type with our `Maybe` just to demonstrate that we can consider `Optional` as a `Monad`

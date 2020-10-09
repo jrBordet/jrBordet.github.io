@@ -4,8 +4,11 @@ title: About
 permalink: /about/
 ---
 
-As Swift developers, we can ignore functional programming any longer?
-Well, the goal of this blog is to explore the fundamentals concepts of functional programming with Swift.
+As Swift developers, we can ignore functional programming any longer? I guess that the answer is no.
+
+
+So, the goal of this blog is to explore the fundamentals concepts 
+of functional programming with Swift.
  
 <!--
 [jekyllrb.com](https://jekyllrb.com/)
