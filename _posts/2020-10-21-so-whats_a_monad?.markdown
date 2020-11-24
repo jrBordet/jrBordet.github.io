@@ -19,13 +19,16 @@ categories: jekyll update
 
 Most of the code from this post is available in a [Swift Package Manager](https://github.com/jrBordet/WhatsMonoids.git), and I strongly recommend to follow it while reading the post.
 
-__spoiler__: in Swift we already have Monoids: `Result`, `Array` and `Optional` are all __monads__.
+<!--__spoiler__: in Swift we already have Monoids: `Result`, `Array` and `Optional` are all __monads__.-->
 
-But...before describe what's a Monad is we should define some other types, like __functors__ and __applicative__. 
+Basically we should remind that our work is related to data manipulation. We can simply define a variable or functions to manipulate informations as we do everyday.
 
-Basically keep in mind that the `M` world help us to transform `data`.
+{% highlight swift %}
 
-So let's start considering a simple value: `Int` and apply a function to this value:
+var x: Int = 0
+
+x = x + 1 
+{% endhighlight %}
 
 {% highlight swift %}
 
@@ -33,11 +36,17 @@ func incr(_ i: Int) -> Int {
     i + 1
 }
 
-incr(1) // 2
+incr(x) // 1
 
 {% endhighlight %}
 
-Simple enough. Lets extend this by saying that any value can be in a context. For now you can think of a context as a `Container` where you can put a value in:
+But, what's the point? The problem with this approach is that we are missing consistency, what's happen if the data are wowen together?
+
+Here is where the `M` world comes in our help giving us a consistent way to transorm `data`.
+
+<!--But...before describe what's a Monad is we should define some other types, like __functors__ and __applicative__. -->
+
+Simple enough with `var` and `functions` since now, so lets extend this by saying that any value can be in a context. For now you can think of a context as a `Container` where you can put a value in:
 
 {% highlight swift %}
 
@@ -72,7 +81,7 @@ let e = Maybe<Int>.error
     
 {% endhighlight %}
 
-First let’s talk about Functors!
+...let’s talk about Functors!
 
 
 # Functors
